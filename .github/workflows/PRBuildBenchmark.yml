@@ -1,0 +1,90 @@
+# This workflow will build a Java project with Gradle
+# For more information see: https://help.github.com/actions/language-and-framework-guides/building-and-testing-java-with-gradle
+
+name: On Demand Build Benchmarking
+
+on:
+  issue_comment:
+    types: [created]
+
+jobs:
+  build-merge:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: khan/pull-request-comment-trigger@master
+        id: check
+        with:
+          trigger: 'benchmark-build'
+
+      - run: 'echo Running Benchmark Now!'
+        if: steps.check.outputs.triggered == 'true'
+
+      # Clone repo
+      - name: Clone Repo
+        uses: actions/checkout@v2
+        with:
+          submodules: recursive
+
+      # Setup JDK on container
+      - name: Set up JDK 1.8
+        uses: actions/setup-java@v1
+        with:
+          java-version: 1.8
+          
+      - name: Install SDKMAN, Gradle Profiler and Begin Profiling
+        run: |
+         curl -s "https://get.sdkman.io" | bash
+         source "$HOME/.sdkman/bin/sdkman-init.sh"
+         sdk install gradleprofiler
+         gradle-profiler --benchmark --scenario-file build_performance.scenarios --warmups 1 --iteration 1
+
+      - uses: actions/upload-artifact@v2
+        with:
+         name: merge-benchmark
+         path: profile-out/benchmark.csv
+
+  build-head:
+    needs: build-merge
+    runs-on: ubuntu-latest
+
+    steps:
+      # Clone repo
+      - name: Clone Repo
+        uses: actions/checkout@v2
+        with:
+          submodules: recursive
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      # Setup JDK on container
+      - name: Set up JDK 1.8
+        uses: actions/setup-java@v1
+        with:
+          java-version: 1.8
+
+      - name: Install SDKMAN, Gradle Profiler and Begin Profiling
+        run: |
+          curl -s "https://get.sdkman.io" | bash
+          source "$HOME/.sdkman/bin/sdkman-init.sh"
+          sdk install gradleprofiler
+          gradle-profiler --benchmark --scenario-file build_performance.scenarios --warmups 1 --iteration 1
+
+      - uses: actions/upload-artifact@v2
+        name: Archive Benchmark Result File
+        with:
+          name: head-benchmark
+          path: profile-out/benchmark.csv
+
+      - uses: actions/download-artifact@v2
+        with:
+          name: merge-benchmark
+          path: profile-out-merge
+
+      - run: ls profile-out-merge
+        name: Debug step- Check if file was downloaded properly
+
+      - name: Print Difference
+        run: | 
+          chmod +x benchmark-difference.py
+          python benchmark-difference.py
