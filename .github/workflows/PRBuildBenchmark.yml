@@ -45,7 +45,7 @@ jobs:
          name: merge-benchmark
          path: profile-out/benchmark.csv
 
-  build-head:
+  build-base:
     needs: build-merge
     runs-on: ubuntu-latest
 
@@ -55,7 +55,7 @@ jobs:
         uses: actions/checkout@v2
         with:
           submodules: recursive
-          ref: ${{ github.event.pull_request.head.sha }}
+          ref: ${{ github.event.pull_request.base.sha }}
 
       # Setup JDK on container
       - name: Set up JDK 1.8
@@ -73,7 +73,7 @@ jobs:
       - uses: actions/upload-artifact@v2
         name: Archive Benchmark Result File
         with:
-          name: head-benchmark
+          name: base-benchmark
           path: profile-out/benchmark.csv
 
       - uses: actions/download-artifact@v2
