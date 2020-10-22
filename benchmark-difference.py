@@ -6,8 +6,8 @@ def get_result(fileName):
         reader = csv.reader(f, skipinitialspace=True)
         return dict(reader)
 
-baseResult = getResult('profile-out/benchmark.csv')
-mergeResult = getResult('profile-out-merge/benchmark.csv')
+baseResult = get_result('profile-out/benchmark.csv')
+mergeResult = get_result('profile-out-merge/benchmark.csv')
 
 baseMean = baseResult['mean']
 mergeMean = mergeResult['mean']
