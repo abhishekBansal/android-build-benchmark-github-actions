@@ -8,7 +8,7 @@ on:
     types: [created]
 
 jobs:
-  build-merge:
+  build-head:
 
     runs-on: ubuntu-latest
 
@@ -21,11 +21,17 @@ jobs:
       - run: 'echo Running Benchmark Now!'
         if: steps.check.outputs.triggered == 'true'
 
-      # Clone repo
+      - uses: xt0rted/pull-request-comment-branch@v1
+        id: comment-branch
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+
+      # Clone head commit
       - name: Clone Repo
         uses: actions/checkout@v2
         with:
           submodules: recursive
+          ref: ${{ steps.comment-branch.outputs.head_ref }}
 
       # Test if correct commit is checked out
       - name: Print File Content
@@ -54,12 +60,17 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Clone repo
+      - uses: xt0rted/pull-request-comment-branch@v1
+        id: comment-branch
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+
+      # Clone head commit
       - name: Clone Repo
         uses: actions/checkout@v2
         with:
           submodules: recursive
-          ref: ${{ github.event.pull_request.base.sha }}
+          ref: ${{ steps.comment-branch.outputs.base_ref }}
 
       # Test if correct commit is checked out
       - name: Print File Content
