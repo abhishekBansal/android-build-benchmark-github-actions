@@ -52,11 +52,11 @@ jobs:
 
       - uses: actions/upload-artifact@v2
         with:
-         name: merge-benchmark
+         name: head-benchmark
          path: profile-out/benchmark.csv
 
   build-base:
-    needs: build-merge
+    needs: build-head
     runs-on: ubuntu-latest
 
     steps:
@@ -65,7 +65,7 @@ jobs:
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
 
-      # Clone head commit
+      # Clone base commit
       - name: Clone Repo
         uses: actions/checkout@v2
         with:
@@ -97,10 +97,10 @@ jobs:
 
       - uses: actions/download-artifact@v2
         with:
-          name: merge-benchmark
-          path: profile-out-merge
+          name: head-benchmark
+          path: profile-out-head
 
-      - run: ls profile-out-merge
+      - run: ls profile-out-head
         name: Debug step- Check if file was downloaded properly
 
       - name: Print Difference
